@@ -1,24 +1,9 @@
 import ast
+from contextlib import contextmanager
 from typing import Optional
 
 from simplify.data import BIN_OPS, CMP_OPS
 from simplify.environment import Environment
-
-
-class EnvHandler:
-    def __init__(self, simplifier, env_name):
-        self._simplifier = simplifier
-        self._env_name = env_name
-
-    def __enter__(self):
-        old_env = self._simplifier.environment
-        new_env = Environment(old_env)
-        old_env[self._env_name] = new_env
-        self._simplifier.environment = new_env
-        return new_env
-
-    def __exit__(self, _, __, ___):
-        self._simplifier.environment = self._simplifier.environment.enclosing
 
 
 class Simplifier(ast.NodeTransformer):
@@ -33,8 +18,14 @@ class Simplifier(ast.NodeTransformer):
     def _visit_nodes(self, nodes: list):
         return [self.visit(n) for n in nodes]
 
+    @contextmanager
     def new_environment(self, name):
-        return EnvHandler(self, name)
+        old_env = self.environment
+        new_env = Environment(old_env)
+        old_env[name] = new_env
+        self.environment = new_env
+        yield
+        self.environment = old_env
 
     # STATEMENTS #
 

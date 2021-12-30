@@ -1,6 +1,6 @@
 import pytest
 
-from simplify.main import main
+from simplify.main import transform_source
 
 
 @pytest.mark.parametrize(
@@ -15,7 +15,7 @@ from simplify.main import main
     ],
 )
 def test_literal(source):
-    assert source == main(source)
+    assert source == transform_source(source)
 
 
 @pytest.mark.parametrize(
@@ -27,4 +27,4 @@ def test_literal(source):
     ],
 )
 def test_arithmetic(expr, answer):
-    assert answer == main(expr)
+    assert answer == transform_source(expr)

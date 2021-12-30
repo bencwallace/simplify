@@ -14,12 +14,15 @@ def main():
 
     if sys.argv[1] == "--source":
         tree = ast.parse(sys.argv[2])
-    elif sys.argv[1] == "--path":
+    elif sys.argv[1] == "--module":
         python_path = sys.argv[2]
         obj = load_obj_from_path(python_path)
         tree = obj_to_tree(obj)
+    elif sys.argv[1] == "--path":
+        with open(sys.argv[2]) as f:
+            tree = ast.parse(f.read())
     else:
-        raise ValueError("Expected either --path or --source.")
+        raise ValueError("Expected either --module, --source, or --path.")
 
     binding_exprs = sys.argv[3:]
     bindings = parse_bindings(binding_exprs)

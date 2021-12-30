@@ -11,23 +11,24 @@ class EnvHandler:
         self._env_name = env_name
 
     def __enter__(self):
-        old_env = self._simplifier._environment
+        old_env = self._simplifier.environment
         new_env = Environment(old_env)
         old_env[self._env_name] = new_env
-        self._simplifier._environment = new_env
+        self._simplifier.environment = new_env
         return new_env
 
     def __exit__(self, _, __, ___):
-        self._simplifier._environment = self._simplifier._environment.enclosing
+        self._simplifier.environment = self._simplifier.environment.enclosing
 
 
 class Simplifier(ast.NodeTransformer):
     def __init__(self, bindings: Optional[dict] = None):
-        self._environment = Environment()
+        self.environment = Environment()
         if bindings is None:
             bindings = {}
         for name, val in bindings.items():
-            self._environment[name] = val
+            self.environment[name] = val
+        self._globals = []
 
     def _visit_nodes(self, nodes: list):
         return [self.visit(n) for n in nodes]
@@ -48,7 +49,10 @@ class Simplifier(ast.NodeTransformer):
         val = self.visit(node.value)
         if isinstance(val, ast.Constant):
             for t in node.targets:
-                self._environment[t.id] = val.value
+                if t.id in self._globals:
+                    self.environment.set(t.id, val.value, is_global=True)
+                else:
+                    self.environment[t.id] = val.value
         return None
 
     def visit_If(self, node):
@@ -58,6 +62,9 @@ class Simplifier(ast.NodeTransformer):
         if test.value:
             return self._visit_nodes(node.body)
         return self._visit_nodes(node.orelse)
+
+    def visit_Global(self, node):
+        self._globals.extend(node.names)
 
     # EXPRESSIONS #
 
@@ -95,7 +102,7 @@ class Simplifier(ast.NodeTransformer):
 
     def visit_Name(self, node):
         if isinstance(node.ctx, ast.Load):
-            if node.id in self._environment:
-                return ast.Constant(self._environment[node.id])
+            if node.id in self.environment:
+                return ast.Constant(self.environment[node.id])
             return node
         raise NotImplementedError(f"Name expression of type {type(node.ctx).__name__} not supported.")

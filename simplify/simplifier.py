@@ -1,6 +1,6 @@
 import ast
 from contextlib import contextmanager
-from typing import Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from simplify.data import BIN_OPS, CMP_OPS
 from simplify.environment import Environment
@@ -15,7 +15,7 @@ class Simplifier(ast.NodeTransformer):
         for name, val in bindings.items():
             self.env[name] = val
 
-    def visit(self, node):
+    def visit(self, node: Union[ast.AST, Iterable]) -> Any:
         if isinstance(node, Iterable):
             return map(self.visit, node)
         return super().visit(node)
@@ -39,16 +39,36 @@ class Simplifier(ast.NodeTransformer):
         self.env[node.name] = result
         return result
 
-    # TODO: Similar for delete (and others?)
-    def visit_Assign(self, node: ast.Assign) -> None:
+    def visit_Return(self, node: ast.Return) -> ast.Return:
+        if node.value:
+            return ast.Return(self.visit(node.value))
+        return ast.Return()
+
+    def visit_Delete(self, node: ast.Delete) -> Optional[ast.Delete]:
+        targets = []
+        for t in self.visit(node.targets):
+            # TODO: Case t not a Name
+            if t.id in self.env:
+                del self.env[t.id]
+            else:
+                targets.append(t)
+        if targets:
+            return ast.Delete(targets)
+        return None
+
+    # TODO: Handle type comment
+    def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
+        targets = self.visit(node.targets)
         val = self.visit(node.value)
         if isinstance(val, ast.Constant):
-            for t in node.targets:
+            for t in targets:
+                # TODO: Check if possible for t not to be a Name
                 if t.id in self.env.globals:
-                    self.env.set(t.id, val.value, is_global=True)
+                    self.global_env[t.id] = val.value
                 else:
                     self.env[t.id] = val.value
-        return None
+            return None
+        return ast.Assign(targets, val)
 
     def visit_If(self, node: ast.If) -> Union[ast.If, Iterable]:
         test = self.visit(node.test)
@@ -102,8 +122,6 @@ class Simplifier(ast.NodeTransformer):
         return ast.Call(func, self.visit(node.args), self.visit(node.keywords))
 
     def visit_Name(self, node: ast.Name) -> Union[ast.Name, ast.Constant]:
-        if isinstance(node.ctx, ast.Load):
-            if node.id in self.env:
-                return ast.Constant(self.env[node.id])
-            return node
-        raise NotImplementedError(f"Name expression of type {type(node.ctx).__name__} not supported.")
+        if isinstance(node.ctx, ast.Load) and node.id in self.env:
+            return ast.Constant(self.env[node.id])
+        return super().generic_visit(node)

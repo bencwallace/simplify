@@ -28,3 +28,13 @@ def test_literal(source):
 )
 def test_arithmetic(expr, answer):
     assert answer == transform_source(expr)
+
+
+@pytest.mark.parametrize(
+    "source, result",
+    [
+        ("x = 1", ""),
+    ],
+)
+def test_assign(source, result):
+    assert result == transform_source(source)

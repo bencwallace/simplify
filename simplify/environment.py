@@ -19,12 +19,6 @@ class Environment:
             result.update(self.values)
         return copy.copy(result)
 
-    def set(self, name, val, is_global=False):
-        if not is_global or not self.enclosing:
-            self.values[name] = val
-        else:
-            self.enclosing.set(name, val, is_global=True)
-
     def __contains__(self, name):
         if name in self.values:
             return True
@@ -32,12 +26,18 @@ class Environment:
             return name in self.enclosing
         return False
 
+    def __delitem__(self, name):
+        if name in self.values:
+            del self.values[name]
+        else:
+            raise RuntimeError(f"Undefined variable: {name}.")
+
     def __getitem__(self, name):
         if name in self.values:
             return self.values[name]
         if self.enclosing:
             return self.enclosing[name]
-        raise RuntimeError(f"Undefined variable {name}")
+        raise RuntimeError(f"Undefined variable: {name}.")
 
     def __setitem__(self, name, val):
-        self.set(name, val)
+        self.values[name] = val

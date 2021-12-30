@@ -3,27 +3,32 @@ import importlib
 import inspect
 from typing import List
 
-from simplify.exceptions import InvalidBindingError, InvalidPythonPathError
+from simplify.exceptions import InvalidBindingError, InvalidExpressionError, InvalidPythonPathError
 
 
 class BindingsParser(ast.NodeTransformer):
-    def visit_Assign(self, node):
-        bindings = {}
-        if isinstance(node.value, ast.Constant):
-            val = self.visit(node.value)
-        else:
-            raise NotImplementedError("Only binding of constants to identifiers is supported.")
-        for t in node.targets:
-            bindings[t.id] = val
-        return bindings
+    @staticmethod
+    def eval_expr(node: ast.Expression):
+        try:
+            code = compile(node, "", mode="eval")
+            return eval(code)
+        except (SyntaxError, NameError) as e:
+            raise InvalidExpressionError(node) from e
 
-    def visit_Constant(self, node):
-        return node.value
+    def generic_visit(self, node):
+        raise InvalidBindingError(node)
 
     def visit_Module(self, node):
         bindings = {}
-        for n in node.body:
-            bindings.update(self.visit(n))
+        for stmt in node.body:
+            bindings.update(self.visit(stmt))
+        return bindings
+
+    def visit_Assign(self, node):
+        bindings = {}
+        val = self.eval_expr(ast.Expression(node.value))
+        for t in node.targets:
+            bindings[t.id] = val
         return bindings
 
 
@@ -75,5 +80,3 @@ def parse_bindings(binding_exprs: List[str]) -> dict:
         parser = BindingsParser()
         bindings.update(parser.visit(tree))
     return bindings
-
-

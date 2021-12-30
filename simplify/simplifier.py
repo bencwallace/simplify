@@ -35,6 +35,22 @@ CMP_OPS = {
 }
 
 
+class EnvHandler:
+    def __init__(self, simplifier, env_name):
+        self._simplifier = simplifier
+        self._env_name = env_name
+
+    def __enter__(self):
+        old_env = self._simplifier._environment
+        new_env = Environment(old_env)
+        old_env[self._env_name] = new_env
+        self._simplifier._environment = new_env
+        return new_env
+
+    def __exit__(self, _, __, ___):
+        self._simplifier._environment = self._simplifier._environment.enclosing
+
+
 class Simplifier(ast.NodeTransformer):
     def __init__(self, bindings: Optional[dict] = None):
         self._environment = Environment()
@@ -45,6 +61,19 @@ class Simplifier(ast.NodeTransformer):
 
     def _visit_nodes(self, nodes: list):
         return [self.visit(n) for n in nodes]
+
+    def new_environment(self, name):
+        return EnvHandler(self, name)
+
+    def visit_FunctionDef(self, node):
+        # TODO: Add decorators, etc.
+        # TODO: Check if return value can be extracted
+        with self.new_environment(node.name):
+            return super().generic_visit(node)
+
+    def visit_Call(self, node):
+        # TODO: Add kwargs
+        pass
 
     # TODO: Similar for delete (and others?)
     def visit_Assign(self, node):

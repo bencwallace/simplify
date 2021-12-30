@@ -8,3 +8,9 @@ class InvalidBindingError(Exception):
     def __init__(self, binding: str):
         message = f"Invalid binding: {binding}"
         super().__init__(message)
+
+
+class InvalidExpressionError(Exception):
+    def __init__(self, expr):
+        message = f"Invalid expression: {expr}"
+        super().__init__(message)

@@ -6,6 +6,10 @@ class Environment:
     def __init__(self, enclosing: Optional["Environment"] = None):
         self.enclosing = enclosing
         self.values = {}
+        self.globals = []
+
+    def add_global(self, *names):
+        self.globals.extend(names)
 
     def flatten(self) -> dict:
         if not self.enclosing:

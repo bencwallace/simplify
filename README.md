@@ -16,6 +16,14 @@ Simplify Python code the way you would mathematical expressions.
 42 * y
 >>> simplify --source "x = 42; x * y" --bind y=2  # inject variable bindings into code
 84
+>>> cat << EOF | simplify --stdin  # simplify statements involving local scope
+> x = 1
+> def f():
+>     x = 2
+>     x
+> EOF
+def f():
+    2
 ```
 
 ## Other possibilities

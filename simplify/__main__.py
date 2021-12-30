@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 import ast
+import inspect
 import sys
 
-from simplify.simplifier import Simplifier
-from simplify.utils import load_obj_from_path, obj_to_tree, parse_bindings
+from simplify.main import main
+from simplify.utils import load_obj_from_path
 
-
-# TODO: Use Typer
-def main():
+if __name__ == "__main__":
     # Usage: python simplify.py [--path path.to.python[:obj]] [--source source] [bindings...]
     if len(sys.argv) < 2:
         print(f"Usage: {sys.argv[0]} [path.to.python[:obj]|source] [bindings...]")
@@ -15,23 +14,15 @@ def main():
 
     # TODO: Store source and use ast.get_source_segment to print better error messages
     if sys.argv[1] == "--source":
-        tree = ast.parse(sys.argv[2])
+        source = sys.argv[2]
     elif sys.argv[1] == "--module":
         python_path = sys.argv[2]
         obj = load_obj_from_path(python_path)
-        tree = obj_to_tree(obj)
+        source = inspect.getsource(obj)
     elif sys.argv[1] == "--path":
         with open(sys.argv[2]) as f:
-            tree = ast.parse(f.read())
+            source = f.read()
     else:
         raise ValueError("Expected either --module, --source, or --path.")
 
-    binding_exprs = sys.argv[3:]
-    bindings = parse_bindings(binding_exprs)
-    result = Simplifier(bindings).visit(tree)
-    text = ast.unparse(result)
-    print(text)
-
-
-if __name__ == "__main__":
-    main()
+    print(main(source, sys.argv[3:]))

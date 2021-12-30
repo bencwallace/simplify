@@ -63,11 +63,6 @@ def get_arg_names(obj: object) -> List[str]:
     return list(sig.parameters.keys())
 
 
-def obj_to_tree(obj: object) -> ast.Module:
-    source = inspect.getsource(obj)
-    return ast.parse(source)
-
-
 def parse_bindings(binding_exprs: List[str]) -> dict:
     # TODO: scope bindings properly
     bindings = {}

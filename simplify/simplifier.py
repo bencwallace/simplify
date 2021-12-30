@@ -1,4 +1,5 @@
 import ast
+import functools
 from contextlib import contextmanager
 from typing import Any, Iterable, Optional, Union
 
@@ -17,7 +18,7 @@ class Simplifier(ast.NodeTransformer):
 
     def visit(self, node: Union[ast.AST, Iterable]) -> Any:
         if isinstance(node, Iterable):
-            return map(self.visit, node)
+            return list(map(self.visit, node))
         return super().visit(node)
 
     @contextmanager
@@ -81,9 +82,45 @@ class Simplifier(ast.NodeTransformer):
     def visit_Global(self, node: ast.Global) -> None:
         self.env.add_globals(*node.names)
 
+    def visit_AugAssign(self, node: ast.AugAssign):
+        # TODO
+        return super().visit_AugAssign(node)
+
     # EXPRESSIONS #
 
-    # TODO: Similar for other statements/expressions
+    def visit_BoolOp(self, node: ast.BoolOp) -> Union[ast.BoolOp, ast.Constant]:
+        values = self.visit(node.values)
+        if not values:
+            return ast.BoolOp(node.op, values)
+
+        const_values = [v for v in values if isinstance(v, ast.Constant)]
+        non_const_values = [v for v in values if not isinstance(v, ast.Constant)]
+
+        if isinstance(node.op, ast.And):
+            reduced_const_value = functools.reduce(lambda x, y: x and y, map(lambda v: v.value, const_values), True)
+            if not non_const_values:
+                # Expression has been fully evaluated
+                return ast.Constant(reduced_const_value)
+            elif reduced_const_value:
+                # Remove redundant `True` from `and`
+                return ast.BoolOp(node.op, non_const_values)
+            else:
+                # Short-circuit evaluation
+                return ast.Constant(False)
+        elif isinstance(node.op, ast.Or):
+            reduced_const_value = functools.reduce(lambda x, y: x or y, map(lambda v: v.value, const_values), False)
+            if not non_const_values:
+                # Expression has been fully evaluated
+                return ast.Constant(reduced_const_value)
+            elif reduced_const_value:
+                # Short-circuit evaluation
+                return ast.Constant(True)
+            else:
+                # Remove redundant `False` from `or`
+                return ast.BoolOp(node.op, non_const_values)
+        else:
+            raise RuntimeError(f"Unrecognized boolean operator: {type(node.op).__name__}")
+
     def visit_BinOp(self, node: ast.BinOp) -> Union[ast.BinOp, ast.Constant]:
         left = self.visit(node.left)
         right = self.visit(node.right)

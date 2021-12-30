@@ -34,7 +34,34 @@ def test_arithmetic(expr, answer):
     "source, result",
     [
         ("x = 1", ""),
+        ("x = 1; x", "1"),
     ],
 )
 def test_assign(source, result):
+    assert result == transform_source(source)
+
+
+@pytest.mark.parametrize(
+    "source, result",
+    [
+        ("del x", "del x"),
+        ("x = 'a'; del x", ""),
+    ],
+)
+def test_del(source, result):
+    assert result == transform_source(source)
+
+
+@pytest.mark.parametrize(
+    "source, result",
+    [
+        ("False and True", "False"),
+        ("False or True", "True"),
+        ("False and x", "False"),
+        ("True and x", "x"),
+        ("False or x", "x"),
+        ("x or True", "True"),
+    ],
+)
+def test_bool(source, result):
     assert result == transform_source(source)

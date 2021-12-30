@@ -9,7 +9,10 @@
             "type": "python",
             "request": "launch",
             "module": "simplify",
-            "args": ["--path", "examples.relu"]
+            "args": [
+                "--source",
+                "False or True"
+            ]
         }
     ]
 }

@@ -1,6 +1,10 @@
+import ast
+from textwrap import dedent
+
 import pytest
 
 from simplify.main import transform_source
+from simplify.simplifier import Simplifier
 
 
 @pytest.mark.parametrize(
@@ -35,6 +39,7 @@ def test_arithmetic(expr, answer):
     [
         ("x = 1", ""),
         ("x = 1; x", "1"),
+        ("x = y = 1; x + y", "2"),
     ],
 )
 def test_assign(source, result):
@@ -76,4 +81,33 @@ def test_bool(source, result):
     ],
 )
 def test_return(source, result):
+    assert result == transform_source(source)
+
+
+def test_if():
+    source = dedent(
+        """
+    if 1 + 1 == 2:
+        yes
+    if False:
+        no
+    """
+    )
+    result = "yes"
+    assert result == transform_source(source)
+
+
+def test_function_def():
+    source = dedent(
+        """
+        def f():
+            return 1 + 1
+        """
+    )
+    result = dedent(
+        """
+        def f():
+            return 2
+        """
+    ).strip("\n")
     assert result == transform_source(source)

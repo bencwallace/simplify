@@ -1,9 +1,12 @@
 import ast
 import importlib
 import inspect
-from typing import List
+from typing import Callable, List, Tuple, TypeVar
 
 from simplify.exceptions import InvalidBindingError, InvalidExpressionError, InvalidPythonPathError
+
+
+T = TypeVar("T")
 
 
 class BindingsParser(ast.NodeTransformer):
@@ -56,10 +59,7 @@ def load_obj_from_path(python_path: str) -> object:
 
 
 def get_arg_names(obj: object) -> List[str]:
-    try:
-        sig = inspect.signature(obj)
-    except:
-        raise ValueError(f"Object {obj.__name__} must be callable")
+    sig = inspect.signature(obj)
     return list(sig.parameters.keys())
 
 
@@ -75,3 +75,14 @@ def parse_bindings(binding_exprs: List[str]) -> dict:
         parser = BindingsParser()
         bindings.update(parser.visit(tree))
     return bindings
+
+
+def split_list_on_predicate(x: List[T], p: Callable[[T], bool]) -> Tuple[List[T], List[T]]:
+    p_true_in_x = []
+    p_false_in_x = []
+    for v in x:
+        if p(v):
+            p_true_in_x.append(v)
+        else:
+            p_false_in_x.append(v)
+    return p_true_in_x, p_false_in_x

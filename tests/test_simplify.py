@@ -35,26 +35,36 @@ def test_arithmetic(expr, answer):
 
 
 @pytest.mark.parametrize(
-    "source, result",
+    "source, result, state, global_ids",
     [
-        ("x = 1", ""),
-        ("x = 1; x", "1"),
-        ("x = y = 1; x + y", "2"),
+        ("x = 1", "", {"x": 1}, []),
+        ("x = 1; x", "1", {"x": 1}, []),
+        ("x = y = 1; x + y", "2", {"x": 1, "y": 1}, []),
+        ("global x; x = 1; x", "1", {"x": 1}, ["x"]),
     ],
 )
-def test_assign(source, result):
-    assert result == transform_source(source)
+def test_assign(source, result, state, global_ids):
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert simplifier.env.flatten() == state
+    assert simplifier.env.global_ids == global_ids
 
 
 @pytest.mark.parametrize(
-    "source, result",
+    "source, result, state",
     [
-        ("del x", "del x"),
-        ("x = 'a'; del x", ""),
+        ("del x", "del x", {}),
+        ("x = 'a'; del x", "", {}),
     ],
 )
-def test_del(source, result):
-    assert result == transform_source(source)
+def test_del(source, result, state):
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert simplifier.env.flatten() == state
 
 
 @pytest.mark.parametrize(
@@ -86,15 +96,19 @@ def test_compare(source, result):
 
 
 @pytest.mark.parametrize(
-    "source, result",
+    "source, result, names",
     [
-        ("def f(): return 1", "def f():\n    return 1"),
-        ("def f(): return", "def f():\n    return"),
-        ("def f(): return 1 + 1", "def f():\n    return 2"),
+        ("def f(): return 1", "def f():\n    return 1", ["f"]),
+        ("def f(): return", "def f():\n    return", ["f"]),
+        ("def f(): return 1 + 1", "def f():\n    return 2", ["f"]),
     ],
 )
-def test_return(source, result):
-    assert result == transform_source(source)
+def test_return(source, result, names):
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert list(simplifier.env.flatten().keys()) == names
 
 
 def test_if():
@@ -134,7 +148,12 @@ def test_function_def():
             return 2
         """
     ).strip("\n")
-    assert result == transform_source(source)
+    names = ["f"]
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert list(simplifier.env.flatten().keys()) == names
 
 
 def test_call():

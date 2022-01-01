@@ -75,6 +75,19 @@ def test_bool(source, result):
 @pytest.mark.parametrize(
     "source, result",
     [
+        ("x == y", "x == y"),
+        ("x == y == z", "x == y == z"),
+        ("1 == 1", "True"),
+        ("1 == 1 < 2", "True"),
+    ],
+)
+def test_compare(source, result):
+    assert result == transform_source(source)
+
+
+@pytest.mark.parametrize(
+    "source, result",
+    [
         ("def f(): return 1", "def f():\n    return 1"),
         ("def f(): return", "def f():\n    return"),
         ("def f(): return 1 + 1", "def f():\n    return 2"),
@@ -97,6 +110,17 @@ def test_if():
     assert result == transform_source(source)
 
 
+@pytest.mark.parametrize(
+    "source, result",
+    [
+        ("yes if 1 - 1 else no", "no"),
+        ("2 + 2 if 1 + 1 else no", "4"),
+    ],
+)
+def test_if_exp(source, result):
+    assert result == transform_source(source)
+
+
 def test_function_def():
     source = dedent(
         """
@@ -110,4 +134,10 @@ def test_function_def():
             return 2
         """
     ).strip("\n")
+    assert result == transform_source(source)
+
+
+def test_call():
+    source = "f(1 + 1)"
+    result = "f(2)"
     assert result == transform_source(source)

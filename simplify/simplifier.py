@@ -28,7 +28,7 @@ class Simplifier(ast.NodeTransformer):
     @contextmanager
     def new_environment(self, name):
         old_env = self.env
-        new_env = Environment(old_env)
+        new_env = Environment(old_env.global_env, old_env)
         old_env[name] = new_env
         self.env = new_env
         yield
@@ -78,11 +78,7 @@ class Simplifier(ast.NodeTransformer):
             case ast.Assign(targets, ast.Constant(value)):
                 for t in self.visit(targets):
                     # TODO: Case t not a name
-                    if t.id in self.env.globals:
-                        env = self.global_env
-                    else:
-                        env = self.env
-                    env[t.id] = value
+                    self.env[t.id] = value
                 return None
             case ast.Assign(targets, value):
                 return ast.Assign(self.visit(targets), self.visit(value))

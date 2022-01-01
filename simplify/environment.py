@@ -3,13 +3,23 @@ from typing import Optional
 
 
 class Environment:
-    def __init__(self, enclosing: Optional["Environment"] = None):
+    def __init__(self, global_env: Optional["Environment"] = None, enclosing: Optional["Environment"] = None):
+        if not bool(global_env) == bool(enclosing):
+            raise TypeError("An environment has a global environment if and only if it has an enclosing environment")
+
+        if not global_env:
+            global_env = self
+        self.global_env = global_env
         self.enclosing = enclosing
+        self.global_ids = []
         self.values = {}
-        self.globals = []
+
+    @property
+    def is_global(self):
+        return not self.enclosing
 
     def add_global(self, *names):
-        self.globals.extend(names)
+        self.global_ids.extend(names)
 
     def flatten(self) -> dict:
         if not self.enclosing:
@@ -40,4 +50,9 @@ class Environment:
         raise RuntimeError(f"Undefined variable: {name}.")
 
     def __setitem__(self, name, val):
-        self.values[name] = val
+        if self.is_global:
+            self.values[name] = val
+        elif name in self.global_ids:
+            self.global_env[name] = val
+        else:
+            self.values[name] = val

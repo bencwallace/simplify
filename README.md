@@ -28,7 +28,10 @@ def f():
     2
 ```
 
-## Other possibilities
+## Types of simplifications
 
+* Partial evaluation of expressions
+* Inlining
+  * Variables
+  * Function calls
 * Unrolling loops
-* Flattening composed functions

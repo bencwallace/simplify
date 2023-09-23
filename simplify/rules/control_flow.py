@@ -1,4 +1,5 @@
 import ast
+from copy import deepcopy
 from typing import TYPE_CHECKING
 
 from simplify.utils import unpack
@@ -23,4 +24,19 @@ def visit_if(node: ast.If, simplifier: Simplifier):
 
 
 def visit_for(node: ast.For, simplifier: Simplifier):
-    pass
+    match node:
+        case ast.For(ast.Name(id), ast.List(elts), body):
+            result = []
+            for e in elts:
+                match e:
+                    case ast.Constant(value):
+                        simplifier.env[id] = value
+                        result.extend(simplifier.visit(deepcopy(body)))
+                    case _:
+                        if id in simplifier.env:
+                            del simplifier.env[id]
+                        return node  # TODO
+            return result
+        case _:
+            # TODO
+            return node

@@ -37,6 +37,9 @@ class Simplifier(ast.NodeTransformer):
     def visit_If(self, node: ast.If) -> Union[ast.If, Iterable]:
         return control_flow.visit_if(node, self)
 
+    def visit_For(self, node: ast.For) -> Union[ast.For, list]:
+        return control_flow.visit_for(node, self)
+
     # EXPRESSIONS #
 
     def visit_BoolOp(self, node: ast.BoolOp) -> Union[ast.BoolOp, ast.Constant]:

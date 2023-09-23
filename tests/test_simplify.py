@@ -52,6 +52,26 @@ def test_assign(source, result, state, global_ids):
     assert simplifier.env.global_ids == global_ids
 
 
+def test_aug_assign():
+    source = "x = 42; x *= (1 + 1)"
+    result = ""
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert simplifier.env.flatten() == {"x": 84}
+
+
+def test_aug_assign_hard():
+    source = "x = 42; x *= y"
+    result = "x *= y"
+    source_tree = ast.parse(source)
+    simplifier = Simplifier()
+    result_tree = simplifier.visit(source_tree)
+    assert result == ast.unparse(result_tree)
+    assert simplifier.env.flatten() == {}
+
+
 @pytest.mark.parametrize(
     "source, result, state",
     [

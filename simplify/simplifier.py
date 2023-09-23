@@ -71,22 +71,29 @@ class Simplifier(ast.NodeTransformer):
             return ast.Delete(new_targets)
         return None
 
-    # TODO: Handle type comment
     # TODO: Substitute RHS expressions (not just constants) into places where LHS appears
+    # TODO: handle unpacking expressions
     def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
         match node:
             case ast.Assign(targets, ast.Constant(value)):
                 for t in self.visit(targets):
-                    # TODO: Case t not a name
-                    self.env[t.id] = value
+                    match t:
+                        # TODO: case t a tuple
+                        case ast.Name(id, _):
+                            self.env[id] = value
                 return None
             case ast.Assign(targets, value):
-                return ast.Assign(self.visit(targets), self.visit(value))
+                # value non-constant so targets become unknown
+                for t in targets:
+                    match t:
+                        case ast.Name(id):
+                            del self.env[id]
+                        # TODO: recursively handle tuples
+                return ast.Assign(self.visit(targets), self.visit(value))  # TODO: this is wrong -- targets is a list
             case _:
                 raise self._visit_wrong_type_error(node)
 
     def visit_If(self, node: ast.If) -> Union[ast.If, Iterable]:
-        # node = super().generic_visit(node)
         match node:
             case ast.If(test, body, orelse):
                 test = self.visit(test)
@@ -108,8 +115,18 @@ class Simplifier(ast.NodeTransformer):
                 raise self._visit_wrong_type_error(node)
 
     def visit_AugAssign(self, node: ast.AugAssign):
-        # TODO
-        return super().visit_AugAssign(node)
+        match node:
+            case ast.AugAssign(ast.Name(id), op, value):
+                value = super().visit(value)
+                match value:
+                    case ast.Constant(value):
+                        self.env[id] = BIN_OPS[type(op)](self.env[id], value)
+                        return None
+                    case _:
+                        del self.env[id]
+                        return ast.AugAssign(ast.Name(id), op, value)
+            case _:
+                raise self._visit_wrong_type_error(node)
 
     # EXPRESSION VISITORS #
 

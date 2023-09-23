@@ -86,3 +86,7 @@ def split_list_on_predicate(x: List[T], p: Callable[[T], bool]) -> Tuple[List[T]
         else:
             p_false_in_x.append(v)
     return p_true_in_x, p_false_in_x
+
+
+def unpack(node: ast.AST) -> Tuple[ast.AST, ...]:
+    return tuple(getattr(node, attr) for attr in node.__match_args__)

@@ -3,7 +3,7 @@ import functools
 from typing import TYPE_CHECKING
 
 from simplify.data import BIN_OPS, CMP_OPS
-from simplify.utils import split_list_on_predicate
+from simplify.utils import split_list_on_predicate, unpack
 
 if TYPE_CHECKING:
     from simplify.simplifier import Simplifier
@@ -75,13 +75,12 @@ def visit_call(node: ast.Call, simplifier: Simplifier):
 
 
 def visit_if_exp(node: ast.IfExp, simplifier: Simplifier):
-    match node:
-        case ast.IfExp(test, body, orelse):
-            test = simplifier.visit(test)
-            match test:
-                case ast.Constant(value) if value:
-                    return simplifier.visit(body)
-                case ast.Constant(value) if not value:
-                    return simplifier.visit(orelse)
-                case _:
-                    return ast.IfExp(test, simplifier.visit(body), simplifier.visit(orelse))
+    test, body, orelse = unpack(node)
+    test = simplifier.visit(test)
+    match test:
+        case ast.Constant(value) if value:
+            return simplifier.visit(body)
+        case ast.Constant(value) if not value:
+            return simplifier.visit(orelse)
+        case _:
+            return ast.IfExp(test, simplifier.visit(body), simplifier.visit(orelse))

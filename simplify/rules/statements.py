@@ -2,6 +2,7 @@ import ast
 from typing import TYPE_CHECKING
 
 from simplify.data import BIN_OPS
+from simplify.utils import unpack
 
 
 if TYPE_CHECKING:
@@ -11,22 +12,23 @@ else:
 
 
 def visit_aug_assign(node: ast.AugAssign, simplifier: Simplifier):
-    match node:
-        case ast.AugAssign(ast.Name(id), op, value):
-            value = super(type(simplifier), simplifier).visit(value)
-            match value:
-                case ast.Constant(value):
-                    simplifier.env[id] = BIN_OPS[type(op)](simplifier.env[id], value)
-                    return None
-                case _:
-                    del simplifier.env[id]
-                    return ast.AugAssign(ast.Name(id), op, value)
+    target, op, value = unpack(node)
+    id, _ = unpack(target)
+    value = super(type(simplifier), simplifier).visit(value)
+    match value:
+        case ast.Constant(value):
+            simplifier.env[id] = BIN_OPS[type(op)](simplifier.env[id], value)
+            return None
+        case _:
+            del simplifier.env[id]
+            return ast.AugAssign(ast.Name(id), op, value)
 
 
 # TODO: Substitute RHS expressions (not just constants) into places where LHS appears
 # TODO: handle unpacking expressions
 def visit_assign(node: ast.Assign, simplifier: Simplifier):
     match node:
+        # TODO: visit value before checking if constant
         case ast.Assign(targets, ast.Constant(value)):
             for t in simplifier.visit(targets):
                 match t:
@@ -48,16 +50,13 @@ def visit_assign(node: ast.Assign, simplifier: Simplifier):
 
 def visit_delete(node: ast.Delete, simplifier: Simplifier):
     new_targets = []
-    match node:
-        case ast.Delete(targets):
-            for t in simplifier.visit(targets):
-                # TODO: case t not a Name
-                if t.id in simplifier.env:
-                    del simplifier.env[t.id]
-                else:
-                    new_targets.append(t)
-        case _:
-            raise simplifier._visit_wrong_type_error(node)
+    (targets,) = unpack(node)
+    for t in simplifier.visit(targets):
+        # TODO: case t not a Name
+        if t.id in simplifier.env:
+            del simplifier.env[t.id]
+        else:
+            new_targets.append(t)
     if new_targets:
         return ast.Delete(new_targets)
     return None

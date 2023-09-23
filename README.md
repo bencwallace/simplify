@@ -6,19 +6,19 @@ Simplify Python code the way you would mathematical expressions.
 
 ```bash
 >>> alias simplify="python -m simplify"
->>> simplify --source "2 + 2"  # evaluate arithmetic
+>>> simplify --source "2 + 2"  # perform arithmetic
 4
->>> simplify --source "13 if 42 + 24 == 66 else 31"  # evaluate conditional expressions
+>>> simplify --source "13 if 42 + 24 == 66 else 31"  # short-circuit conditionals
 13
->>> simplify --source "x = 42; 2 * x"  # evaluate expressions depending on global state
+>>> simplify --source "x = 42; 2 * x"  # resolve stateful expressions
 84
->>> simplify --source "x = 42; x * y"  # partially evaluate expressions
+>>> simplify --source "x = 42; x * y"  # perform partial evaluation
 42 * y
->>> simplify --source "(True or x) and y"  # short-circuit evaluation in boolean expressions
+>>> simplify --source "(True or x) and y"  # short-circuit boolean expressions
 y
 >>> simplify --source "x = 42; x * y" --bind y=2  # inject variable bindings into code
 84
->>> cat << EOF | simplify --stdin  # simplify statements involving local scope
+>>> cat << EOF | simplify --stdin  # track local scope
 > x = 1
 > def f():
 >     x = 2
@@ -26,12 +26,11 @@ y
 > EOF
 def f():
     2
+>>> cat << EOF | simplify --stdin  # unfold loops
+> for x in [1, 2, 3]:
+>     print(x)
+> EOF
+print(1)
+print(2)
+print(3)
 ```
-
-## Types of simplifications
-
-* Partial evaluation of expressions
-* Inlining
-  * Variables
-  * Function calls
-* Unrolling loops

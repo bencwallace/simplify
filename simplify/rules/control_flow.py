@@ -30,11 +30,11 @@ def visit_for(node: ast.For, simplifier: Simplifier):
             for e in elts:
                 match e:
                     case ast.Constant(value):
-                        simplifier.env[id] = ast.Constant(value)
+                        simplifier.scope[id] = ast.Constant(value)
                         result.extend(simplifier.visit(deepcopy(body)))
                     case _:
-                        if id in simplifier.env:
-                            del simplifier.env[id]
+                        if id in simplifier.scope:
+                            del simplifier.scope[id]
                         return node  # TODO
             return result
         case _:

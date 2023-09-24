@@ -2,7 +2,7 @@ import ast
 
 import pytest
 
-from simplify.environment import Environment
+from simplify.scope import Scope
 from simplify.simplifier import Simplifier
 
 
@@ -20,13 +20,13 @@ def test_assign(source, result, state, global_ids):
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    result_env = Environment()
+    result_scope = Scope()
     for k, v in state.items():
-        result_env[k] = v
+        result_scope[k] = v
     for k in global_ids:
-        result_env.global_ids.append(k)
-    assert simplifier.env == result_env
-    assert simplifier.env.global_ids == global_ids
+        result_scope.global_ids.append(k)
+    assert simplifier.scope == result_scope
+    assert simplifier.scope.global_ids == global_ids
 
 
 def test_aug_assign():
@@ -36,9 +36,9 @@ def test_aug_assign():
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    result_env = Environment()
-    result_env["x"] = ast.Constant(84)
-    assert simplifier.env == result_env
+    result_scope = Scope()
+    result_scope["x"] = ast.Constant(84)
+    assert simplifier.scope == result_scope
 
 
 def test_aug_assign_hard():
@@ -48,9 +48,9 @@ def test_aug_assign_hard():
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    result_env = Environment()
-    result_env["x"] = ast.AugAssign(ast.Name("x", ast.Store()), ast.Mult(), ast.Name("y", ast.Load()))
-    assert simplifier.env == result_env
+    result_scope = Scope()
+    result_scope["x"] = ast.AugAssign(ast.Name("x", ast.Store()), ast.Mult(), ast.Name("y", ast.Load()))
+    assert simplifier.scope == result_scope
 
 
 @pytest.mark.parametrize(
@@ -65,4 +65,4 @@ def test_delete(source, result, state):
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    assert simplifier.env.flatten() == state
+    assert simplifier.scope.flatten() == state

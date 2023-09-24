@@ -2,18 +2,18 @@ import ast
 from contextlib import contextmanager
 from typing import Any, Iterable, Optional, Union
 
-from simplify.environment import Environment
+from simplify.scope import Scope
 from simplify.rules import control_flow, expressions, function_and_class_defs, statements, variables
 
 
 class Simplifier(ast.NodeTransformer):
     def __init__(self, bindings: Optional[dict] = None):
-        self.global_env = Environment()
-        self.env = self.global_env
+        self.global_scope = Scope()
+        self.scope = self.global_scope
         if bindings is None:
             bindings = {}
         for name, val in bindings.items():
-            self.env[name] = val
+            self.scope[name] = val
 
     def visit(self, node: Union[ast.AST, Iterable]) -> Any:
         if isinstance(node, Iterable):
@@ -23,11 +23,11 @@ class Simplifier(ast.NodeTransformer):
         return super().visit(node)
 
     @contextmanager
-    def new_environment(self, name):
-        self.env = self.env.add_env(name)
+    def new_scope(self, name):
+        self.scope = self.scope.add_scope(name)
         yield
-        self.env = self.env.enclosing
-        self.env.del_env(name)
+        self.scope = self.scope.enclosing
+        self.scope.del_scope(name)
 
     # CONTROL FLOW #
 

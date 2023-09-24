@@ -4,17 +4,17 @@ from typing import Optional
 from simplify.utils import eq_nodes
 
 
-class Environment:
-    def __init__(self, global_env: Optional["Environment"] = None, enclosing: Optional["Environment"] = None):
-        if not bool(global_env) == bool(enclosing):
-            raise TypeError("An environment has a global environment if and only if it has an enclosing environment")
+class Scope:
+    def __init__(self, global_scope: Optional["Scope"] = None, enclosing: Optional["Scope"] = None):
+        if not bool(global_scope) == bool(enclosing):
+            raise TypeError("A scope has a global scope if and only if it has an enclosing scope")
 
-        if not global_env:
-            global_env = self
-        self.global_env = global_env
+        if not global_scope:
+            global_scope = self
+        self.global_scope = global_scope
         self.enclosing = enclosing
 
-        self.enclosed = {}  # enclosed sub-environments
+        self.enclosed = {}  # enclosed sub-scopes
         self.global_ids = []
         self.values = {}
 
@@ -22,15 +22,15 @@ class Environment:
     def is_global(self):
         return not self.enclosing
 
-    def add_env(self, name) -> "Environment":
+    def add_scope(self, name) -> "Scope":
         assert name not in self.enclosed
-        self.enclosed[name] = Environment(self.global_env, self)
+        self.enclosed[name] = Scope(self.global_scope, self)
         return self.enclosed[name]
 
     def add_global(self, *names):
         self.global_ids.extend(names)
 
-    def del_env(self, name):
+    def del_scope(self, name):
         del self.enclosed[name]
 
     def flatten(self) -> dict:
@@ -54,7 +54,7 @@ class Environment:
         else:
             raise RuntimeError(f"Undefined variable: {name}.")
 
-    def __eq__(self, other: "Environment"):
+    def __eq__(self, other: "Scope"):
         if not len(self.values) == len(other.values):
             return False
         for k in self.values:
@@ -79,6 +79,6 @@ class Environment:
         if self.is_global:
             self.values[name] = val
         elif name in self.global_ids:
-            self.global_env[name] = val
+            self.global_scope[name] = val
         else:
             self.values[name] = val

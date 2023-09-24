@@ -25,7 +25,7 @@ def test_function_def():
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    assert list(simplifier.env.flatten().keys()) == names
+    assert list(simplifier.scope.flatten().keys()) == names
 
 
 def test_lambda():
@@ -57,4 +57,4 @@ def test_return(source, result, names):
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    assert list(simplifier.env.flatten().keys()) == names
+    assert list(simplifier.scope.flatten().keys()) == names

@@ -69,7 +69,7 @@ def visit_compare(node: ast.Compare, simplifier: Simplifier):
 
 
 def visit_call(node: ast.Call, simplifier: Simplifier):
-    # TODO: Inline calls (look up node.func.id in self.env)
+    # TODO: Inline calls (look up node.func.id in self.scope)
     # TODO: Partial evaluation of calls
     return super(type(simplifier), simplifier).generic_visit(node)
 

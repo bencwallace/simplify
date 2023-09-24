@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 
-from simplify.environment import Environment
+from simplify.scope import Scope
 from simplify.main import transform_source
 from simplify.simplifier import Simplifier
 
@@ -40,6 +40,6 @@ def test_for(template):
     simplifier = Simplifier()
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
-    result_env = Environment()
-    result_env["x"] = ast.Constant(3)
-    assert simplifier.env == result_env
+    result_scope = Scope()
+    result_scope["x"] = ast.Constant(3)
+    assert simplifier.scope == result_scope

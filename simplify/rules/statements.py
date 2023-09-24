@@ -15,11 +15,11 @@ def visit_aug_assign(node: ast.AugAssign, simplifier: Simplifier):
     target, op, value = unpack(node)
     id, _ = unpack(target)
     x = super(type(simplifier), simplifier).visit(value)
-    y = simplifier.env[id]
+    y = simplifier.scope[id]
     if isinstance(x, ast.Constant) and isinstance(y, ast.Constant):
-        simplifier.env[id] = ast.Constant(BIN_OPS[type(op)](x.value, y.value))
+        simplifier.scope[id] = ast.Constant(BIN_OPS[type(op)](x.value, y.value))
         return None
-    simplifier.env[id] = node
+    simplifier.scope[id] = node
     return node
 
 
@@ -32,7 +32,7 @@ def visit_assign(node: ast.Assign, simplifier: Simplifier):
     for t in targets:
         match t:
             case ast.Name(id):
-                simplifier.env[id] = value
+                simplifier.scope[id] = value
             case _:
                 new_targets.append(t)
     if new_targets:
@@ -45,8 +45,8 @@ def visit_delete(node: ast.Delete, simplifier: Simplifier):
     (targets,) = unpack(node)
     for t in simplifier.visit(targets):
         # TODO: case t not a Name
-        if t.id in simplifier.env:
-            del simplifier.env[t.id]
+        if t.id in simplifier.scope:
+            del simplifier.scope[t.id]
         else:
             new_targets.append(t)
     if new_targets:

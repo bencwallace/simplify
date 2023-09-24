@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/scope python3
 import typer
 
 from simplify.main import main

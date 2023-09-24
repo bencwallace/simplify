@@ -24,10 +24,9 @@ class Simplifier(ast.NodeTransformer):
 
     @contextmanager
     def new_scope(self, name):
-        self.scope = self.scope.add_scope(name)
+        self.scope = Scope(self.global_scope, self.scope)
         yield
         self.scope = self.scope.enclosing
-        self.scope.del_scope(name)
 
     # CONTROL FLOW #
 

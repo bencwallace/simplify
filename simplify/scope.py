@@ -14,18 +14,12 @@ class Scope:
         self.global_scope = global_scope
         self.enclosing = enclosing
 
-        self.enclosed = {}  # enclosed sub-scopes
         self.global_ids = []
         self.values = {}
 
     @property
     def is_global(self):
         return not self.enclosing
-
-    def add_scope(self, name) -> "Scope":
-        assert name not in self.enclosed
-        self.enclosed[name] = Scope(self.global_scope, self)
-        return self.enclosed[name]
 
     def add_global(self, *names):
         self.global_ids.extend(names)

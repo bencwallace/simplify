@@ -3,6 +3,7 @@ from textwrap import dedent
 
 import pytest
 
+from simplify.main import transform_source
 from simplify.simplifier import Simplifier
 
 
@@ -25,6 +26,22 @@ def test_function_def():
     result_tree = simplifier.visit(source_tree)
     assert result == ast.unparse(result_tree)
     assert list(simplifier.env.flatten().keys()) == names
+
+
+def test_lambda():
+    source = dedent(
+        """
+        f = lambda x: x ** 2
+        y = f(z)
+        print(y)
+        """
+    )
+    result = dedent(
+        """
+        print((lambda x: x ** 2)(z))
+        """
+    ).strip("\n")
+    assert result == transform_source(source)
 
 
 @pytest.mark.parametrize(

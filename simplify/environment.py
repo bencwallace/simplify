@@ -1,6 +1,8 @@
 import copy
 from typing import Optional
 
+from simplify.utils import eq_nodes
+
 
 class Environment:
     def __init__(self, global_env: Optional["Environment"] = None, enclosing: Optional["Environment"] = None):
@@ -41,6 +43,20 @@ class Environment:
             del self.values[name]
         else:
             raise RuntimeError(f"Undefined variable: {name}.")
+
+    def __eq__(self, other: "Environment"):
+        if not len(self.values) == len(other.values):
+            return False
+        for k in self.values:
+            if k not in other:
+                return False
+            if not eq_nodes(self[k], other[k]):
+                return False
+        if self.enclosing:
+            if not other.enclosing:
+                return False
+            return self.enclosing == other.enclosing
+        return set(self.global_ids) == set(other.global_ids)
 
     def __getitem__(self, name):
         if name in self.values:

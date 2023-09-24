@@ -30,6 +30,7 @@ class Simplifier(ast.NodeTransformer):
         old_env[name] = new_env
         self.env = new_env
         yield
+        del old_env[name]
         self.env = old_env
 
     # CONTROL FLOW #

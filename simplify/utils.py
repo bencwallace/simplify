@@ -90,3 +90,18 @@ def split_list_on_predicate(x: List[T], p: Callable[[T], bool]) -> Tuple[List[T]
 
 def unpack(node: ast.AST) -> Tuple[ast.AST, ...]:
     return tuple(getattr(node, attr) for attr in node.__match_args__)
+
+
+def eq_nodes(x, y) -> bool:
+    if type(x) is not type(y):
+        return False
+    if isinstance(x, list):
+        if not len(x) == len(y):
+            return False
+        return all(eq_nodes(a, b) for a, b in zip(x, y))
+    if isinstance(x, ast.AST):
+        for attr in x.__match_args__:
+            if not eq_nodes(getattr(x, attr), getattr(y, attr)):
+                return False
+        return True
+    return x == y

@@ -4,7 +4,6 @@ from typing import Any, Iterable, Optional, Union
 
 from simplify.environment import Environment
 from simplify.rules import control_flow, expressions, function_and_class_defs, statements, variables
-from simplify.utils import split_list_on_predicate
 
 
 class Simplifier(ast.NodeTransformer):
@@ -25,13 +24,10 @@ class Simplifier(ast.NodeTransformer):
 
     @contextmanager
     def new_environment(self, name):
-        old_env = self.env
-        new_env = Environment(old_env.global_env, old_env)
-        old_env[name] = new_env
-        self.env = new_env
+        self.env = self.env.add_env(name)
         yield
-        del old_env[name]
-        self.env = old_env
+        self.env = self.env.enclosing
+        self.env.del_env(name)
 
     # CONTROL FLOW #
 

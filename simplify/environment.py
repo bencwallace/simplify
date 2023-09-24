@@ -13,6 +13,8 @@ class Environment:
             global_env = self
         self.global_env = global_env
         self.enclosing = enclosing
+
+        self.enclosed = {}  # enclosed sub-environments
         self.global_ids = []
         self.values = {}
 
@@ -20,8 +22,16 @@ class Environment:
     def is_global(self):
         return not self.enclosing
 
+    def add_env(self, name) -> "Environment":
+        assert name not in self.enclosed
+        self.enclosed[name] = Environment(self.global_env, self)
+        return self.enclosed[name]
+
     def add_global(self, *names):
         self.global_ids.extend(names)
+
+    def del_env(self, name):
+        del self.enclosed[name]
 
     def flatten(self) -> dict:
         if not self.enclosing:

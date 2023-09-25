@@ -1,10 +1,8 @@
-import ast
 from textwrap import dedent
 
 import pytest
 
 from simplify.main import transform_source
-from simplify.simplifier import Simplifier
 
 
 def test_function_def():
@@ -20,12 +18,7 @@ def test_function_def():
             return 2
         """
     ).strip("\n")
-    names = ["f"]
-    source_tree = ast.parse(source)
-    simplifier = Simplifier()
-    result_tree = simplifier.visit(source_tree)
-    assert result == ast.unparse(result_tree)
-    assert list(simplifier.scope.flatten().keys()) == names
+    assert transform_source(source) == result
 
 
 def test_lambda():
@@ -39,22 +32,18 @@ def test_lambda():
     result = dedent(
         """
         print((lambda x: x ** 2)(z))
-        """
+        """  # TODO: simplify further
     ).strip("\n")
     assert result == transform_source(source)
 
 
 @pytest.mark.parametrize(
-    "source, result, names",
+    "source, result",
     [
-        ("def f(): return 1", "def f():\n    return 1", ["f"]),
-        ("def f(): return", "def f():\n    return", ["f"]),
-        ("def f(): return 1 + 1", "def f():\n    return 2", ["f"]),
+        ("def f(): return 1", "def f():\n    return 1"),
+        ("def f(): return", "def f():\n    return"),
+        ("def f(): return 1 + 1", "def f():\n    return 2"),
     ],
 )
-def test_return(source, result, names):
-    source_tree = ast.parse(source)
-    simplifier = Simplifier()
-    result_tree = simplifier.visit(source_tree)
-    assert result == ast.unparse(result_tree)
-    assert list(simplifier.scope.flatten().keys()) == names
+def test_return(source, result):
+    assert transform_source(source) == result

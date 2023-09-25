@@ -12,12 +12,11 @@ else:
 def visit_function_def(node: ast.FunctionDef, simplifier: Simplifier):
     # TODO: Add decorators, etc.
     # TODO: Check if return value can be extracted
-    name, *_ = unpack(node)
-    with simplifier.new_scope(name):
+    with simplifier.new_scope():
         result = super(type(simplifier), simplifier).generic_visit(
             node
         )  # must be visited in the function's local scope
-    simplifier.scope[name] = result  # must be assigned in the scope enclosing the function
+    simplifier.scope[node.name] = result  # must be assigned in the scope enclosing the function
     return result
 
 

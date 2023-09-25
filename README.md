@@ -18,6 +18,8 @@ Simplify Python code the way you would mathematical expressions.
 y
 >>> simplify --source "x = 42; x * y" --bind y=2  # inject variable bindings into code
 84
+>>> simplify --source "(lambda x: x ** 2)(y + 3)"  # inline function calls
+(y + 3) ** 2
 >>> cat << EOF | simplify --stdin  # track local scope
 > x = 1
 > def f():

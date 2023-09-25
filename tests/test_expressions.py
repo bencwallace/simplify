@@ -60,6 +60,12 @@ def test_call():
     assert result == transform_source(source)
 
 
+def test_call_lambda():
+    source = "(lambda x: x ** 2)(y + 3)"
+    result = "(y + 3) ** 2"
+    assert result == transform_source(source)
+
+
 @pytest.mark.parametrize(
     "source",
     [

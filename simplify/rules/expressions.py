@@ -71,6 +71,13 @@ def visit_compare(node: ast.Compare, simplifier: Simplifier):
 def visit_call(node: ast.Call, simplifier: Simplifier):
     # TODO: Inline calls (look up node.func.id in self.scope)
     # TODO: Partial evaluation of calls
+    func, call_args, _ = unpack(node)
+    call_args = simplifier.visit(call_args)
+    match func:
+        # simplest case
+        case ast.Lambda(ast.arguments(args=lambda_args), body) if len(lambda_args) == len(call_args):
+            with simplifier.new_scope({lbd_arg.arg: cl_arg for lbd_arg, cl_arg in zip(lambda_args, call_args)}):
+                return simplifier.visit(body)
     return super(type(simplifier), simplifier).generic_visit(node)
 
 

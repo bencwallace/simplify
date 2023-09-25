@@ -1,6 +1,6 @@
 import ast
 from contextlib import contextmanager
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
 
 from simplify.scope import Scope
 from simplify.rules import control_flow, expressions, function_and_class_defs, statements, variables
@@ -23,8 +23,11 @@ class Simplifier(ast.NodeTransformer):
         return super().visit(node)
 
     @contextmanager
-    def new_scope(self, name):
+    def new_scope(self, values: Optional[Dict[str, Any]] = None):
+        values = values or {}
         self.scope = Scope(self.global_scope, self.scope)
+        for key, val in values.items():
+            self.scope[key] = val
         yield
         self.scope = self.scope.enclosing
 

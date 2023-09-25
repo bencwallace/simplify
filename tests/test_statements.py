@@ -2,6 +2,7 @@ import ast
 
 import pytest
 
+from simplify.main import transform_source
 from simplify.scope import Scope
 from simplify.simplifier import Simplifier
 
@@ -30,27 +31,15 @@ def test_assign(source, result, state, global_ids):
 
 
 def test_aug_assign():
-    source = "x = 42; x *= (1 + 1)"
-    result = ""
-    source_tree = ast.parse(source)
-    simplifier = Simplifier()
-    result_tree = simplifier.visit(source_tree)
-    assert result == ast.unparse(result_tree)
-    result_scope = Scope()
-    result_scope["x"] = ast.Constant(84)
-    assert simplifier.scope == result_scope
+    source = "x = 42; x *= (1 + 1); x"
+    result = "84"
+    assert transform_source(source) == result
 
 
 def test_aug_assign_hard():
-    source = "x = 42; x *= y"
-    result = "x *= y"
-    source_tree = ast.parse(source)
-    simplifier = Simplifier()
-    result_tree = simplifier.visit(source_tree)
-    assert result == ast.unparse(result_tree)
-    result_scope = Scope()
-    result_scope["x"] = ast.AugAssign(ast.Name("x", ast.Store()), ast.Mult(), ast.Name("y", ast.Load()))
-    assert simplifier.scope == result_scope
+    source = "x = 42; x *= y; x"
+    result = "42 * y"
+    assert transform_source(source) == result
 
 
 @pytest.mark.parametrize(

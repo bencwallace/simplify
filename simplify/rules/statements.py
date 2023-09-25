@@ -13,14 +13,17 @@ else:
 
 def visit_aug_assign(node: ast.AugAssign, simplifier: Simplifier):
     target, op, value = unpack(node)
-    id, _ = unpack(target)
-    x = super(type(simplifier), simplifier).visit(value)
-    y = simplifier.scope[id]
-    if isinstance(x, ast.Constant) and isinstance(y, ast.Constant):
-        simplifier.scope[id] = ast.Constant(BIN_OPS[type(op)](x.value, y.value))
-        return None
-    simplifier.scope[id] = node
-    return node
+    match target:
+        case ast.Name(id) if id in simplifier.scope:
+            x = simplifier.scope[id]
+            y = super(type(simplifier), simplifier).visit(value)
+            x = ast.BinOp(x, op, y)
+            x = super(type(simplifier), simplifier).visit(x)
+            simplifier.scope[id] = x
+            return None
+        case _:
+            # TODO
+            return node
 
 
 # TODO: Substitute RHS expressions (not just constants) into places where LHS appears

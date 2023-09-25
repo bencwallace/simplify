@@ -11,30 +11,30 @@ else:
     Simplifier = "Simplifier"
 
 
-def visit_if(node: ast.If, simplifier: Simplifier):
+def visit_if(node: ast.If, simp: Simplifier):
     test, body, orelse = unpack(node)
-    test = simplifier.visit(test)
+    test = simp.visit(test)
     match test:
         case ast.Constant(value) if value:
-            return simplifier.visit(body)
+            return simp.visit(body)
         case ast.Constant(value) if not value:
-            return simplifier.visit(orelse)
+            return simp.visit(orelse)
         case _:
-            return ast.If(test, simplifier.visit(body), simplifier.visit(orelse))
+            return ast.If(test, simp.visit(body), simp.visit(orelse))
 
 
-def visit_for(node: ast.For, simplifier: Simplifier):
+def visit_for(node: ast.For, simp: Simplifier):
     match node:
         case ast.For(ast.Name(id), ast.List(elts), body):
             result = []
             for e in elts:
                 match e:
                     case ast.Constant(value):
-                        simplifier.scope[id] = ast.Constant(value)
-                        result.extend(simplifier.visit(deepcopy(body)))
+                        simp.scope[id] = ast.Constant(value)
+                        result.extend(simp.visit(deepcopy(body)))
                     case _:
-                        if id in simplifier.scope:
-                            del simplifier.scope[id]
+                        if id in simp.scope:
+                            del simp.scope[id]
                         return node  # TODO
             return result
         case _:

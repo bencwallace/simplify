@@ -79,3 +79,9 @@ def test_call_lambda():
 )
 def test_literal(source):
     assert source == transform_source(source)
+
+
+def test_unary_op():
+    source = "-(-13)"
+    result = "13"
+    assert result == transform_source(source)

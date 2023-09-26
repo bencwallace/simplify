@@ -56,6 +56,9 @@ class Simplifier(ast.NodeTransformer):
     def visit_Call(self, node: ast.Call) -> ast.Call:
         return expressions.visit_call(node, self)
 
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> Union[ast.Constant, ast.UnaryOp]:
+        return expressions.visit_unary_op(node, self)
+
     # FUNCTION AND CLASS DEFINITIONS"
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:

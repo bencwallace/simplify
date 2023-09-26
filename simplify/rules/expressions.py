@@ -2,7 +2,7 @@ import ast
 import functools
 from typing import TYPE_CHECKING
 
-from simplify.data import BIN_OPS, CMP_OPS
+from simplify.data import BIN_OPS, CMP_OPS, UNARY_OPS
 from simplify.utils import split_list_on_predicate, unpack
 
 if TYPE_CHECKING:
@@ -91,3 +91,11 @@ def visit_if_exp(node: ast.IfExp, simp: Simplifier):
             return simp.visit(orelse)
         case _:
             return ast.IfExp(test, simp.visit(body), simp.visit(orelse))
+
+
+def visit_unary_op(node: ast.UnaryOp, simp: Simplifier):
+    op, operand = unpack(node)
+    operand = simp.visit(operand)
+    if isinstance(operand, ast.Constant):
+        return ast.Constant(UNARY_OPS[type(op)](operand.value))
+    return ast.UnaryOp(op, operand)

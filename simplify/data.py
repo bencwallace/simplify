@@ -30,3 +30,11 @@ CMP_OPS = {
     ast.In: lambda x, y: x in y,
     ast.NotIn: lambda x, y: x not in y,
 }
+
+
+UNARY_OPS = {
+    ast.UAdd: op.pos,
+    ast.USub: op.neg,
+    ast.Not: op.not_,
+    ast.Invert: op.inv,
+}

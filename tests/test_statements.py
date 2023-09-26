@@ -9,6 +9,18 @@ from simplify.simplifier import Simplifier
 @pytest.mark.parametrize(
     "source, result",
     [
+        ("assert True, message", ""),
+        ('assert False, "message"', "raise AssertionError('message')"),
+        ("assert x, message", "assert x, message"),
+    ],
+)
+def test_visit_assert(source, result):
+    assert transform_source(source) == result
+
+
+@pytest.mark.parametrize(
+    "source, result",
+    [
         ("x = 1; x", "1"),
         ("x = y = 1; x + y", "2"),
         ("global x; x = 1; x", "1"),  # TODO: better test

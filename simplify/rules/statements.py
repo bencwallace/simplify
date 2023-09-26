@@ -1,7 +1,6 @@
 import ast
 from typing import TYPE_CHECKING
 
-from simplify.data import BIN_OPS
 from simplify.utils import unpack
 
 
@@ -9,6 +8,19 @@ if TYPE_CHECKING:
     from simplify.simplifier import Simplifier
 else:
     Simplifier = "Simplifier"
+
+
+def visit_assert(node: ast.Assert, simp: Simplifier):
+    test, msg = unpack(node)
+    msg = simp.visit(msg)
+    test = simp.visit(test)
+    match test:
+        case ast.Constant(True):
+            return None
+        case ast.Constant(False):
+            return ast.Raise(ast.Call(ast.Name("AssertionError", ast.Load()), [msg], []))
+        case _:
+            return node
 
 
 def visit_aug_assign(node: ast.AugAssign, simp: Simplifier):

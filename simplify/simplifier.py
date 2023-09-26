@@ -73,6 +73,9 @@ class Simplifier(ast.NodeTransformer):
 
     # STATEMENTS #
 
+    def visit_Assert(self, node: ast.Assert):
+        return statements.visit_assert(node, self)
+
     def visit_Delete(self, node: ast.Delete) -> Optional[ast.Delete]:
         return statements.visit_delete(node, self)
 

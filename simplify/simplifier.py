@@ -1,3 +1,4 @@
+from _ast import Attribute
 import ast
 from contextlib import contextmanager
 from typing import Any, Dict, Iterable, Optional, Union
@@ -82,6 +83,9 @@ class Simplifier(ast.NodeTransformer):
         return statements.visit_aug_assign(node, self)
 
     # VARIABLES #
+
+    def visit_Attribute(self, node: Attribute) -> Any:
+        return variables.visit_attribute(node, self)
 
     def visit_Name(self, node: ast.Name) -> Union[ast.Name, ast.Constant]:
         return variables.visit_name(node, self)

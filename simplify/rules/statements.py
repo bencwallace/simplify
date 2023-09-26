@@ -13,17 +13,15 @@ else:
 
 def visit_aug_assign(node: ast.AugAssign, simp: Simplifier):
     target, op, value = unpack(node)
+    name = None
     match target:
         case ast.Name(id) if id in simp.scope:
-            x = simp.scope[id]
-            y = super(type(simp), simp).visit(value)
-            x = ast.BinOp(x, op, y)
-            x = super(type(simp), simp).visit(x)
-            simp.scope[id] = x
-            return None
-        case _:
-            # TODO
-            return node
+            name = id
+        case ast.Attribute(ast.Name(id), attr) if f"{id}.{attr}" in simp.scope:
+            name = f"{id}.{attr}"
+    if not name:
+        return node  # TODO
+    simp.scope[name] = simp.visit(ast.BinOp(simp.scope[name], op, simp.visit(value)))
 
 
 # TODO: Substitute RHS expressions (not just constants) into places where LHS appears
@@ -36,6 +34,8 @@ def visit_assign(node: ast.Assign, simp: Simplifier):
         match t:
             case ast.Name(id):
                 simp.scope[id] = value
+            case ast.Attribute(ast.Name(id), attr):
+                simp.scope[f"{id}.{attr}"] = value
             case _:
                 new_targets.append(t)
     if new_targets:
@@ -47,11 +47,13 @@ def visit_delete(node: ast.Delete, simp: Simplifier):
     new_targets = []
     (targets,) = unpack(node)
     for t in simp.visit(targets):
-        # TODO: case t not a Name
-        if t.id in simp.scope:
-            del simp.scope[t.id]
-        else:
-            new_targets.append(t)
+        match t:
+            case ast.Name(id) if id in simp.scope:
+                del simp.scope[t.id]
+            case ast.Attribute(ast.Name(id), attr) if (name := f"{id}.{attr}") in simp.scope:
+                del simp.scope[name]
+            case _:
+                new_targets.append(t)
     if new_targets:
         return ast.Delete(new_targets)
     return None

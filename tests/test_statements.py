@@ -18,6 +18,12 @@ def test_assign(source, result):
     assert transform_source(source) == result
 
 
+def test_assign_attr():
+    source = "x.y = 3.14; x.y"
+    result = "3.14"
+    assert transform_source(source) == result
+
+
 def test_aug_assign():
     source = "x = 42; x *= (1 + 1); x"
     result = "84"

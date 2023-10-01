@@ -2,7 +2,7 @@
 
 Simplify Python code the way you would mathematical expressions.
 
-## Examples
+## CLI examples
 
 ```bash
 >>> alias simplify="python -m simplify"
@@ -28,19 +28,77 @@ y
 def f():
     return 13
 print(13)
->>> cat << EOF | simplify --stdin  # track local scope
-> x = 1
-> def f():
->     x = 2
->     x
-> EOF
+```
+
+## Side-by-side examples
+
+<table style="width:100%">
+
+<tr>
+<th> Before </th>
+<th> After </th>
+</tr>
+
+<tr>
+<td>
+
+```python
+def f():
+    return 13
+print(f())
+```
+
+</td>
+<td>
+
+```python
+def f():
+    return 13
+print(13)
+```
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+```python
+x = 1
+def f():
+    x = 2
+    x
+```
+
+</td>
+<td>
+
+```python
 def f():
     2
->>> cat << EOF | simplify --stdin  # unfold loops
-> for x in [1, 2, 3]:
->     print(x)
-> EOF
+```
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+```python
+for x in [1, 2, 3]:
+    print(x)
+```
+
+</td>
+<td>
+
+```python
 print(1)
 print(2)
 print(3)
 ```
+
+</td>
+</tr>
+
+</table>

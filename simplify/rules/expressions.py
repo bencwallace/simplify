@@ -2,6 +2,7 @@ import ast
 import functools
 from typing import TYPE_CHECKING
 
+from simplify.bindings import get_bindings
 from simplify.data import BIN_OPS, CMP_OPS, UNARY_OPS
 from simplify.utils import split_list_on_predicate, unpack
 
@@ -78,6 +79,16 @@ def visit_call(node: ast.Call, simp: Simplifier):
         case ast.Lambda(ast.arguments(args=lambda_args), body) if len(lambda_args) == len(call_args):
             with simp.new_scope({lbd_arg.arg: cl_arg for lbd_arg, cl_arg in zip(lambda_args, call_args)}):
                 return simp.visit(body)
+        case ast.Name(name, ast.Load()) if name in simp.scope:
+            fn_def = simp.scope[name]
+            match fn_def:
+                case ast.FunctionDef(_, _, body):
+                    bindings = get_bindings(fn_def.args, node)
+                    with simp.new_scope(bindings):
+                        body = simp.visit(fn_def.body)
+                        match body:
+                            case [ast.Return(value)]:
+                                return value
     return super(type(simp), simp).generic_visit(node)
 
 

@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 import pytest
 
 from simplify.main import transform_source
@@ -63,6 +65,24 @@ def test_call():
 def test_call_lambda():
     source = "(lambda x: x ** 2)(y + 3)"
     result = "(y + 3) ** 2"
+    assert result == transform_source(source)
+
+
+def test_call_fn_def():
+    source = dedent(
+        """
+        def f():
+            return 13
+        print(f())
+        """
+    )
+    result = dedent(
+        """
+        def f():
+            return 13
+        print(13)
+        """
+    ).strip("\n")
     assert result == transform_source(source)
 
 

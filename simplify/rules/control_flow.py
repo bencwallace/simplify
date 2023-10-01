@@ -24,8 +24,12 @@ def visit_if(node: ast.If, simp: Simplifier):
 
 
 def visit_for(node: ast.For, simp: Simplifier):
-    match node:
-        case ast.For(ast.Name(id), ast.List(elts), body):
+    target, iter_, body, *_ = unpack(node)  # TODO: orelse
+    target = simp.visit(target)
+    iter_ = simp.visit(iter_)
+    body = simp.visit(body)
+    match (target, iter_):
+        case (ast.Name(id), ast.List(elts)):
             result = []
             for e in elts:
                 match e:
@@ -37,6 +41,3 @@ def visit_for(node: ast.For, simp: Simplifier):
                             del simp.scope[id]
                         return node  # TODO
             return result
-        case _:
-            # TODO
-            return node

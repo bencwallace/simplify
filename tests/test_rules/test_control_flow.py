@@ -22,7 +22,8 @@ def test_if():
 def test_for(template):
     source = dedent(
         f"""
-        for x in [1, 2, 3]:
+        xs = [1, 2, 3]
+        for x in xs:
             {template}
         """
     )

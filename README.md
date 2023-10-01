@@ -85,7 +85,8 @@ def f():
 <td>
 
 ```python
-for x in [1, 2, 3]:
+xs = [1, 2, 3]
+for x in xs:
     print(x)
 ```
 

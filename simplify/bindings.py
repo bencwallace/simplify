@@ -1,5 +1,5 @@
 import ast
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
 from simplify.utils import unpack
 
@@ -52,21 +52,18 @@ def get_bindings(fn_args: ast.arguments, call: ast.Call):
     kwarg: Optional[ast.arg]
 
     # POSITIONAL ARGUMENTS #
-    ## POSITIONAL-ONLY ARGUMENTS ##
     try:
         posonly_bindings = _bind_pos_only(posonlyargs, call_args)
     except BindingError:
         return {}
     bindings.update(posonly_bindings)
 
-    ## POSITIONAL-OPTIONAL ARGUMENTS ##
     try:
         pos_bindings = _bind_pos(args, call_args[len(bindings) :], call_kwargs)
     except BindingError:
         return {}
     bindings.update(pos_bindings)
 
-    ## VARARG ##
     if vararg:
         bindings[vararg.arg] = ast.Tuple(list(call_args[len(bindings) :]), ast.Load())
 

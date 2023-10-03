@@ -87,8 +87,8 @@ def visit_call(node: ast.Call, simp: Simplifier):
                     with simp.new_scope(bindings):
                         body = simp.visit(fn_def.body)
                         match body:
-                            case [ast.Return(value)]:
-                                return value
+                            case [ast.Return(value), *_]:
+                                return simp.visit(value)
     return super(type(simp), simp).generic_visit(node)
 
 
